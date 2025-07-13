@@ -2,6 +2,7 @@ import requests
 from torpy.http.requests import tor_requests_session
 from config import CONFIG, logger
 import random
+from aiohttp_socks import ProxyConnector
 
 def get_proxies():
     try:
@@ -18,6 +19,14 @@ def get_tor_session():
         return tor_requests_session()
     else:
         return requests.Session()
+
+async def get_async_tor_connector():
+    """Создание асинхронного коннектора для Tor"""
+    if CONFIG["tor_library"] == "torpy":
+        # aiohttp-socks can be used with Tor's SOCKS port
+        return ProxyConnector.from_url('socks5://127.0.0.1:9050')
+    return None
+
 def get_random_proxy():
     """Выбор случайного прокси"""
     proxies = CONFIG["proxies"] or get_proxies()
