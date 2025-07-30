@@ -1,168 +1,255 @@
-CyberBlitz README
-================
+<div align="center">
+  <img src="https://raw.githubusercontent.com/A11gitss/CyberBlitz-DDoS/main/banner.png
+  " alt="CyberBlitz Banner" style="max-width: 100%;"/>
+</div>
 
-Overview
---------
-CyberBlitz is a powerful, modular, and highly customizable stress-testing tool designed for security researchers, penetration testers, and system administrators. Built in Python, it provides a comprehensive suite of Layer 4 and Layer 7 attack methods to simulate high-load scenarios, helping to evaluate the resilience of networks, servers, and applications. With advanced features like traffic spoofing, proxy support, and browser emulation, CyberBlitz is a go-to tool for controlled, ethical stress testing.
+<div align="center">
+  <h1 align="center">CyberBlitz - Advanced Stress Testing Tool</h1>
+</div>
 
-Legal Disclaimer: CyberBlitz is intended for educational and authorized testing purposes only. Unauthorized use against systems without explicit permission is illegal and unethical. Always obtain consent from system owners before conducting tests.
+<p align="center">
+  <a href="https://github.com/A11gitss/CyberBlitz-DDoS/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/A11gitss/CyberBlitz-DDoS?style=for-the-badge" alt="License">
+  </a>
+</p>
 
-Features
---------
-CyberBlitz is packed with features to make it a versatile and robust tool:
+---
 
-- Comprehensive Attack Methods:
-  - Layer 4 Attacks: AMP (NTP, DNS, STUN, WSD, SADP), TCP (TCP-ACK, TCP-SYN, TCP-BYPASS, OVH-TCP), UDP (UDP, UDP-VSE, UDP-BYPASS), Game-specific (GAME, GAME-MC, GAME-WARZONE, GAME-R6, FIVEM-KILL), Special (SSH, GAME-KILL, TCP-SOCKET, DISCORD, SLOWLORIS).
-  - Layer 7 Attacks: HTTP/HTTPS (HTTPS-FLOODER, HTTPS-BYPASS, HTTP-BROWSER, HTTPS-ARTERMIS), Locust for distributed load testing.
-  - Botnet Simulation: UDPBYPASS-BOT, OVH-HEX, GREBOT, TCPBOT.
-- Traffic Spoofing and Anonymity:
-  - Supports Tor (torpy or torsocks) for anonymized traffic.
-  - Integrates SOCKS5 proxy chains for non-transparent proxying.
-  - Spoofs User-Agent, cookies, browser fingerprints, timezone, screen resolution, and language using Faker and fake-useragent.
-- High Performance:
-  - Leverages asyncio for asynchronous HTTP attacks and concurrent.futures for Layer 4 attacks.
-  - Optimized threading for maximum throughput.
-- Browser Emulation:
-  - Supports Selenium and Playwright for realistic browser-based attacks with customizable behaviors (clicks, scrolling).
-- User-Friendly Interface:
-  - Beautiful CLI powered by Click and Rich, featuring progress bars and result tables.
-- Logging: Detailed logs stored in logs/cyberblitz.log for monitoring and debugging.
+### ⚠️ Предупреждение / Warning
 
-Use Cases
----------
-CyberBlitz is designed for ethical stress testing in controlled environments, such as:
-- Testing the resilience of web servers, APIs, and network infrastructure.
-- Simulating DDoS attacks to evaluate mitigation strategies.
-- Assessing the performance of firewalls, WAFs, and CDNs under load.
-- Conducting penetration testing with explicit permission.
-- Educational purposes to understand attack vectors and defense mechanisms.
+**Этот инструмент предназначен исключительно для образовательных целей и для использования в рамках легального стресс-тестирования и анализа безопасности с явного разрешения владельца целевого ресурса.**
 
-**Guaranteed Impact**: When used correctly in a controlled environment, CyberBlitz can generate significant load, potentially overwhelming unprotected systems. It is 100% effective for testing server limits, identifying bottlenecks, and validating security configurations.
+**Автор не несет никакой ответственности за любой ущерб или незаконные действия, совершенные с использованием этого программного обеспечения. Использование CyberBlitz для атаки на цели, на которые у вас нет разрешения, является незаконным и может повлечь за собой серьезные юридические последствия.**
 
-Installation
------------
-Prerequisites:
-- Python 3.11 or 3.12 (Python 3.13 may have compatibility issues with some libraries).
-- Tor installed for Tor-based anonymity (torpy or torsocks).
-- Chrome browser for Selenium or Playwright (automatically managed by Playwright).
+**This tool is intended for educational purposes and for use in legal stress testing and security analysis with the explicit permission of the target resource owner.**
 
-Setup:
-1. Clone or download the CyberBlitz repository:
-   git clone <repository_url>
-   cd CyberBlitz
+**The author bears no responsibility for any damage or illegal actions committed using this software. Using CyberBlitz to attack targets for which you do not have permission is illegal and may result in severe legal consequences.**
 
-2. Install dependencies:
-   pip install -r requirements.txt
+---
 
-3. Ensure Tor is running (for Tor-based attacks):
-   - On Windows: Install Tor Browser or Tor Expert Bundle and run tor.exe.
-   - On Linux/macOS: Install Tor with sudo apt install tor or brew install tor and start it with tor.
+## 🇷🇺
 
-4. (Optional) Configure torsocks for system-level Tor integration.
+### О проекте
 
-Usage
------
-CyberBlitz is controlled via a command-line interface (CLI) using the main.py script. The primary command is attack, which launches a stress test with customizable options.
+**CyberBlitz** — это многофункциональный и мощный инструмент для проведения стресс-тестирования, спроектированный для специалистов по безопасности и разработчиков. Он позволяет имитировать широкий спектр атак — от низкоуровневых сетевых флудов (Layer 4) до сложных атак на уровне приложений (Layer 7), нацеленных на обход современных систем защиты.
 
-Command Structure:
-python main.py attack [OPTIONS]
+Архитектура приложения позволяет управлять им двумя способами:
+1.  **Графический пользовательский интерфейс (GUI):** Написанный на `PyQt5`, он предоставляет интуитивно понятное управление всеми функциями, отслеживание метрик в реальном времени и доступ к расширенным настройкам.
+2.  **Интерфейс командной строки (CLI):** Созданный с помощью `click`, он идеально подходит для автоматизации, интеграции в скрипты и быстрого запуска атак.
 
-Options:
---target        Target IP or URL (required). Example: 192.168.1.1 or http://example.com
---port          Target port (for Layer 4 attacks). Default: 80. Example: 80
---method        Attack method (required). Example: TCP-SYN or HTTPS-FLOODER
---threads       Number of threads/tasks. Default: 100. Example: 200
---duration      Attack duration (seconds). Default: 60. Example: 120
---use-tor       Enable Tor for anonymity. Example: --use-tor
---tor-lib       Tor library (torpy or torsocks). Default: torpy. Example: --tor-lib torsocks
---use-proxy     Enable SOCKS5 proxies. Example: --use-proxy
---browser       Browser emulation (none, selenium, playwright). Default: none. Example: --browser playwright
---clicks        Enable clicks in browser emulation. Example: --clicks
---scroll        Enable scrolling in browser emulation. Example: --scroll
---delay         Delay between browser actions (seconds). Default: 1.0. Example: --delay 0.5
+### Ключевые возможности
 
-Supported Attack Methods:
-- Layer 4:
-  - AMP: NTP, DNS, STUN, WSD, SADP
-  - TCP: TCP-ACK, TCP-SYN, TCP-BYPASS, OVH-TCP
-  - UDP: UDP, UDP-VSE, UDP-BYPASS
-  - Game: GAME, GAME-MC (Minecraft), GAME-WARZONE (Call of Duty: Warzone), GAME-R6 (Rainbow Six Siege), FIVEM-KILL (FiveM)
-  - Special: SSH, GAME-KILL, TCP-SOCKET, DISCORD, SLOWLORIS
-- Layer 7:
-  - HTTP/HTTPS: HTTPS-FLOODER, HTTPS-BYPASS, HTTP-BROWSER, HTTPS-ARTERMIS
-  - Distributed: LOCUST
-- Botnet:(NOT WORKING!)
-  - UDPBYPASS-BOT, OVH-HEX, GREBOT, TCPBOT
+*   **Атаки Layer 7 (Уровень приложения):**
+    *   **Продвинутый обход Cloudflare (`HTTPS-BYPASS`, `CF-TLS`):** Использует `tls-client` для имитации TLS-отпечатков браузеров и `Playwright` для автоматического решения JavaScript-челленджей и получения валидационных cookie (`cf_clearance`).
+    *   **Эмуляция реального браузера (`HTTP-BROWSER`):** Запускает полноценный браузер для имитации действий пользователя (клики, скроллинг), делая трафик неотличимым от легитимного.
+    *   **Интеграция с Locust (`LOCUST`):** Позволяет проводить распределенное стресс-тестирование для создания огромной нагрузки.
 
-Example Commands:
-1. TCP-SYN Flood with Tor and Proxies:
-   python main.py attack --target 192.168.1.1 --port 80 --method TCP-SYN --threads 200 --duration 120 --use-tor --tor-lib torpy --use-proxy
+*   **Атаки Layer 4 (Сетевой уровень):**
+    *   **TCP/UDP Флуды:** Включают `TCP-SYN`, `TCP-ACK` и различные виды `UDP`-флуда.
+    *   **Атаки с амплификацией (AMP):** Используют уязвимые NTP, DNS и STUN серверы для многократного усиления атаки.
+    *   **Специализированные атаки:** Методы, нацеленные на игровые серверы, сервисы (`SSH`) и "медленные" атаки типа `Slowloris`.
 
-2. HTTPS Flood with Playwright and Browser Actions:
-   python main.py attack --target http://example.com --method HTTPS-FLOODER --threads 150 --duration 60 --use-browser playwright --clicks --scroll --delay 0.5
+*   **Обход Anti-DDoS провайдеров:**
+    *   CyberBlitz спроектирован для обхода не только **Cloudflare** и **OVH**, но и других провайдеров, полагающихся на клиентские проверки. Благодаря эмуляции браузера и продвинутому спуфингу, он может быть эффективен против **DDoS-Guard, StormWall, Imperva** и других систем, которые анализируют поведение клиента, TLS-отпечатки и заголовки.
 
-3. Slowloris Attack:
-   python main.py attack --target 192.168.1.1 --port 80 --method SLOWLORIS --threads 200 --duration 120
+*   **Продвинутая анонимность и спуфинг:**
+    *   **Менеджер Tor:** Автоматически запускает и ротирует несколько независимых цепочек Tor для максимальной анонимности.
+    *   **Детализированный спуфинг:** Генерирует полноценную "личность" браузера, включая современные заголовки `Sec-CH-UA`, язык, часовой пояс, разрешение экрана и реалистичные `Referer`.
 
-4. Locust Distributed Load Test:
-   python main.py attack --target http://example.com --method LOCUST --threads 100 --duration 60
+*   **Мониторинг и отчетность:**
+    *   Собирает метрики в реальном времени (RPS, задержка) и экспортирует их в `JSON`, `CSV` или `HTML`-отчеты с графиками.
 
-5. Minecraft Game Server Attack with Proxies:
-   python main.py attack --target 192.168.1.1 --port 25565 --method GAME-MC --threads 300 --duration 90 --use-proxy
+### Установка
 
-Project Structure
------------------
-CyberBlitz/
-├── config.py              # Configuration and logging
-├── cli.py                # Interactive CLI (Click + Rich)
-├── attacks/
-│   ├── __init__.py
-│   ├── layer4.py         # Layer 4 attacks (Scapy, custom Slowloris)
-│   ├── layer7.py         # Layer 7 attacks (Asyncio, Selenium, Playwright, Locust)
-│   ├── botnet.py         # Botnet simulation attacks
-├── utils/
-│   ├── __init__.py
-│   ├── proxy.py          # Proxy management (Torpy, Proxychains)
-│   ├── spoofing.py       # Traffic spoofing (Faker, User-Agent, Fingerprint)
-├── logs/
-│   └── cyberblitz.log    # Attack logs
-├── main.py               # Entry point
-└── requirements.txt      # Dependencies
+1.  **Клонируйте репозиторий:**
+    ```bash
+    git clone https://github.com/A11gitss/CyberBlitz-DDoS.git
+    cd CyberBlitz-DDoS
+    ```
 
-Dependencies
-------------
-Listed in requirements.txt:
-- scapy==2.5.0
-- requests==2.31.0
-- torpy==1.1.6
-- aiohttp==3.8.4
-- selenium==4.8.0
-- playwright==1.30.0
-- locust==2.15.0
-- faker==13.3.0
-- fake-useragent==0.1.11
-- click==8.1.3
-- rich==12.6.0
+2.  **Создайте и активируйте виртуальное окружение (рекомендуется):**
+    ```bash
+    python -m venv venv
+    # Windows
+    .\venv\Scripts\activate
+    # macOS/Linux
+    source venv/bin/activate
+    ```
 
-Troubleshooting
----------------
-- Slowloris Issues: The project uses a custom Slowloris implementation to avoid dependency issues. Ensure your system supports socket operations.
-- Tor Errors: Verify that Tor is running (tor process or Tor Browser). For torsocks, configure it correctly in your system.
-- Python Version: Use Python 3.11 or 3.12 for maximum compatibility. Python 3.13 may cause issues with some libraries.
-- Proxy Issues: Ensure the proxy list from proxyscrape.com is accessible. Alternatively, provide your own proxy list in config.py.
+3.  **Установите зависимости:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Notes
------
-- Performance: CyberBlitz is optimized for high performance with asynchronous HTTP attacks and multi-threaded Layer 4 attacks. Adjust --threads based on your system's capabilities.
-- Anonymity: Use --use-tor and --use-proxy for maximum anonymity. Spoofing options (User-Agent, cookies, etc.) are enabled by default.
-- Browser Emulation: Selenium and Playwright require a compatible browser (Chrome for Selenium, managed automatically by Playwright).
-- Ethical Use: Always obtain permission before testing. Misuse can lead to legal consequences.
+4.  **Установите браузерные движки для Playwright:**
+    ```bash
+    playwright install
+    ```
 
-Contributing
-------------
-Contributions are welcome! Submit pull requests or issues to the repository. Ideas for new attack methods, optimizations, or features are appreciated.
-Telegram: https://t.me/a11_89d
+### Как использовать
 
-License
--------
-This project is provided for educational purposes under the MIT License. Use responsibly and ethically.
+#### Графический интерфейс (GUI)
+
+Для запуска GUI выполните команду:
+```bash
+python gui.py
+```
+Интерфейс позволяет легко настроить все параметры атаки: выбрать цель, порт, метод, количество потоков и длительность. Во вкладках "Сеть и Спуфинг" и "Дополнительно" можно включить Tor/прокси и тонко настроить параметры эмуляции браузера.
+
+#### Интерфейс командной строки (CLI)
+
+**Общий формат:**
+```bash
+python cli.py --target <IP_ИЛИ_URL> --method <МЕТОД> [ОПЦИИ]
+```
+
+**Примеры запуска атак:**
+
+*   **Простой UDP флуд на IP-адрес:**
+    ```bash
+    python cli.py --target 1.2.3.4 --port 80 --method UDP --threads 100 --duration 120
+    ```
+
+*   **HTTPS флуд на сайт с использованием Tor:**
+    ```bash
+    python cli.py --target https://example.com --method HTTPS-FLOODER --threads 50 --duration 300 --use-tor
+    ```
+
+*   **Атака с эмуляцией браузера для обхода базовой защиты:**
+    ```bash
+    python cli.py --target https://example.com --method HTTP-BROWSER --threads 10 --duration 180 --clicks --scroll
+    ```
+
+*   **Продвинутый обход Cloudflare с помощью TLS-отпечатков и прокси:**
+    ```bash
+    # Убедитесь, что у вас есть файл proxies.txt
+    python cli.py --target https://protected.com --method HTTPS-BYPASS --threads 20 --duration 300 --use-proxy --proxy-file proxies.txt --proxy-type socks5
+    ```
+
+📬 Обратная связь
+
+Если у вас есть идеи, предложения по улучшению или вы хотите внести вклад в развитие проекта — не стесняйтесь связаться со мной:
+
+📨 Telegram: @a11_89d
+
+Любая помощь и обратная связь приветствуются!
+
+### Лицензия
+
+Этот проект распространяется под лицензией MIT. Подробности смотрите в файле [LICENSE](LICENSE).
+
+---
+
+## 🇬🇧 English
+
+### About The Project
+
+**CyberBlitz** is a versatile and powerful stress-testing tool designed for security professionals and developers. It allows for the simulation of a wide range of attacks, from low-level network floods (Layer 4) to sophisticated application-level attacks (Layer 7) aimed at bypassing modern security systems.
+
+The application can be operated in two ways:
+1.  **Graphical User Interface (GUI):** Built with `PyQt5`, it provides an intuitive interface for managing all features, monitoring metrics in real-time, and accessing advanced settings.
+2.  **Command-Line Interface (CLI):** Created with `click`, it is ideal for automation, script integration, and quick attack execution.
+
+### Key Features
+
+*   **Layer 7 (Application Level) Attacks:**
+    *   **Advanced Cloudflare Bypass (`HTTPS-BYPASS`, `CF-TLS`):** Utilizes `tls-client` to mimic browser TLS fingerprints and `Playwright` to automatically solve JavaScript challenges and obtain validation cookies (`cf_clearance`).
+    *   **Real Browser Emulation (`HTTP-BROWSER`):** Launches a full-fledged browser to simulate user actions (clicks, scrolling), making the traffic indistinguishable from legitimate users.
+    *   **Locust Integration (`LOCUST`):** Enables distributed stress testing to generate immense load.
+
+*   **Layer 4 (Network Level) Attacks:**
+    *   **TCP/UDP Floods:** Includes `TCP-SYN`, `TCP-ACK`, and various `UDP` flood types.
+    *   **Amplification Attacks (AMP):** Uses vulnerable NTP, DNS, and STUN servers to multiply attack traffic.
+    *   **Specialized Attacks:** Methods targeting game servers, services (`SSH`), and "slow-rate" attacks like `Slowloris`.
+
+*   **Bypassing Anti-DDoS Providers:**
+    *   CyberBlitz is designed to bypass not only **Cloudflare** and **OVH** but also other providers that rely on client-side challenges. Thanks to its browser emulation and advanced spoofing, it can be effective against **DDoS-Guard, StormWall, Imperva**, and other systems that analyze client behavior, TLS fingerprints, and headers.
+
+*   **Advanced Anonymity & Spoofing:**
+    *   **Tor Manager:** Automatically launches and rotates multiple independent Tor circuits for maximum anonymity.
+    *   **Detailed Spoofing:** Generates a complete browser persona, including modern `Sec-CH-UA` headers, language, timezone, screen resolution, and realistic `Referer` headers.
+
+*   **Monitoring & Reporting:**
+    *   Collects real-time metrics (RPS, latency) and exports them to `JSON`, `CSV`, or `HTML` reports with graphs.
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/A11gitss/CyberBlitz-DDoS.git
+    cd CyberBlitz-DDoS
+    ```
+
+2.  **Create and activate a virtual environment (recommended):**
+    ```bash
+    python -m venv venv
+    # Windows
+    .\venv\Scripts\activate
+    # macOS/Linux
+    source venv/bin/activate
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Install Playwright browser engines:**
+    ```bash
+    playwright install
+    ```
+
+### How To Use
+
+#### Graphical User Interface (GUI)
+
+To launch the GUI, run the command:
+```bash
+python gui.py
+```
+The interface allows you to easily configure all attack parameters: select the target, port, method, number of threads, and duration. In the "Network & Spoofing" and "Advanced" tabs, you can enable Tor/proxy and fine-tune browser emulation settings.
+
+#### Command-Line Interface (CLI)
+
+**General format:**
+```bash
+python cli.py --target <IP_OR_URL> --method <METHOD> [OPTIONS]
+```
+
+**Attack launch examples:**
+
+*   **Simple UDP flood on an IP address:**
+    ```bash
+    python cli.py --target 1.2.3.4 --port 80 --method UDP --threads 100 --duration 120
+    ```
+
+*   **HTTPS flood on a website using Tor:**
+    ```bash
+    python cli.py --target https://example.com --method HTTPS-FLOODER --threads 50 --duration 300 --use-tor
+    ```
+
+*   **Browser emulation attack to bypass basic protection:**
+    ```bash
+    python cli.py --target https://example.com --method HTTP-BROWSER --threads 10 --duration 180 --clicks --scroll
+    ```
+
+*   **Advanced Cloudflare bypass using TLS fingerprints and proxies:**
+    ```bash
+    # Make sure you have a proxies.txt file
+    python cli.py --target https://protected.com --method HTTPS-BYPASS --threads 20 --duration 300 --use-proxy --proxy-file proxies.txt --proxy-type socks5
+    ```
+
+📬 Feedback
+
+If you have ideas, suggestions for improvement, or want to contribute — feel free to reach out:
+
+📨 Telegram: @a11_89d
+
+Any help or feedback is welcome!
+
+### License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+*Note: The author has not fully translated the repository's internal code and comments into English. The primary language of the codebase is Russian.*
