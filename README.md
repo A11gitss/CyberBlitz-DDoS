@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/A11gitss/CyberBlitz-DDoS/main/banner.png
-  " alt="CyberBlitz Banner" style="max-width: 100%;"/>
+  <img src="https://raw.githubusercontent.com/A11gitss/CyberBlitz-DDoS/main/banner.png" alt="CyberBlitz Banner" style="max-width: 100%;"/>
 </div>
 
 <div align="center">
