@@ -16,10 +16,12 @@ from attacks.layer4 import AMPAttack, TCPAttack, UDPAttack, GameAttack, SpecialA
 from attacks.layer7 import TLSAttack, HTTPAttack, BrowserAttack, get_locust_attack
 from attacks.botnet import BotnetAttack
 from utils.proxy import load_proxies_from_file
+from utils.spoofing import load_user_agents_from_file
 from gui_constants import ATTACK_METHODS, BROWSER_CONFIGS
 
 console = Console()
 logger = logging.getLogger(__name__)
+
 
 def display_welcome():
     console.print(Panel("[bold green]Добро пожаловать в CyberBlitz![/bold green]\nМощный и удобный инструмент для стресс-тестирования.", title="[bold cyan]CyberBlitz TUI[/bold cyan]", border_style="green"))
@@ -56,9 +58,19 @@ def get_advanced_options(method):
         options['behaviors'] = [b for b in ['clicks', 'scroll'] if Confirm.ask(f"[bold cyan]Эмулировать {b}?[/bold cyan]", default=True)]
     options['use_proxy'] = Confirm.ask("[bold cyan]Использовать прокси? (не рекомендуется с Tor)[/bold cyan]", default=False)
     if options['use_proxy']:
-        options['proxy_file'] = Prompt.ask("[bold cyan]Путь к файлу с прокси[/bold cyan]")
+        options['proxy_file'] = Prompt.ask("[bold cyan]Путь к файлу с прокси[/bold cyan]", default="proxies.txt")
         options['proxy_type'] = Prompt.ask("[bold cyan]Тип прокси[/bold cyan]", choices=['http', 'https', 'socks4', 'socks5'], default='socks5')
+    
     options['use_tor'] = Confirm.ask("[bold cyan]Использовать Tor? (требует запущенного Tor на порту 9050)[/bold cyan]", default=False)
+
+    options['user_agent_source'] = Prompt.ask(
+        "[bold cyan]Источник User-Agent'ов[/bold cyan]",
+        choices=['generate', 'file'],
+        default='generate'
+    )
+    if options['user_agent_source'] == 'file':
+        options['user_agent_file'] = Prompt.ask("[bold cyan]Путь к файлу с User-Agent'ами[/bold cyan]", default="user_agents.txt")
+
     return options
 
 def confirm_and_run(params, skip_confirm=False):
@@ -74,10 +86,25 @@ def confirm_and_run(params, skip_confirm=False):
     if params['method'] == 'LOCUST':
         import gevent.monkey
         gevent.monkey.patch_all()
-        # fake_useragent больше не требует этой настройки,
-        # но gevent patch необходим для locust.
 
-    update_config(target_ip=params['target'], target_url=params['target'], port=params['port'], threads=params['threads'], duration=params['duration'], use_tor=params.get('use_tor', False), use_proxy=params.get('use_proxy', False), browser_type=params.get('browser_type', 'none'), browser_behaviors=params.get('behaviors', []))
+    # --- Config Update ---
+    update_config(
+        target_ip=params['target'], target_url=params['target'], port=params['port'], 
+        threads=params['threads'], duration=params['duration'], 
+        use_tor=params.get('use_tor', False), use_proxy=params.get('use_proxy', False), 
+        browser_type=params.get('browser_type', 'none'), browser_behaviors=params.get('behaviors', [])
+    )
+    
+    spoofing_opts = {}
+    if params.get('user_agent_source') == 'file' and params.get('user_agent_file'):
+        user_agents = load_user_agents_from_file(params['user_agent_file'])
+        if user_agents:
+            spoofing_opts['user_agent_source'] = 'file'
+            CONFIG['user_agents_list'] = user_agents
+    
+    if spoofing_opts:
+        CONFIG['spoofing'] = {**CONFIG.get('spoofing', {}), **spoofing_opts}
+
     if params.get('use_proxy') and params.get('proxy_file'):
         CONFIG['proxies'] = load_proxies_from_file(params['proxy_file'], params['proxy_type'])
         if not CONFIG['proxies']:
@@ -90,11 +117,11 @@ def confirm_and_run(params, skip_confirm=False):
         'HTTPS-FLOODER': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTPS-FLOODER'),
         'LOCUST': lambda: get_locust_attack()(CONFIG['target_url'], CONFIG['duration'], 'LOCUST-HTTP'),
         **{m: (lambda m: lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['AMP']},
-        **{m: (lambda m: lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['TCP']},
-        **{m: (lambda m: lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['UDP']},
+        **{m: (lambda m: lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['TCP']},
+        **{m: (lambda m: lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['UDP']},
         **{m: (lambda m: lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['GAME']},
-        **{m: (lambda m: lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['SPECIAL']},
-        'SLOWLORIS': lambda: SlowLorisAttack(CONFIG['target_ip'], CONFIG['port'], 'SLOWLORIS', CONFIG['duration']),
+        **{m: (lambda m: lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['SPECIAL']},
+        'SLOWLORIS': lambda: SlowLorisAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], 'SLOWLORIS', num_sockets=CONFIG['threads']*2),
         **{m: (lambda m: lambda: BotnetAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L7']['BOTNET']},
     }
     attack_instance = attack_map[params['method']]()
@@ -187,11 +214,13 @@ def run_attack_with_progress(attack_instance, params):
 @click.option('--proxy-file', help='Path to proxy file.')
 @click.option('--proxy-type', type=click.Choice(['http', 'https', 'socks4', 'socks5']), help='Proxy type.')
 @click.option('--use-tor', is_flag=True, help='Enable Tor for anonymization.')
+@click.option('--user-agent-source', type=click.Choice(['generate', 'file']), default='generate', help="Source for User-Agents ('generate' or 'file').")
+@click.option('--user-agent-file', help='Path to User-Agent file (if source is "file").')
 @click.option('--browser-type', type=click.Choice(['playwright', 'selenium']), help='Browser type for L7 attacks.')
 @click.option('--clicks', is_flag=True, help='Enable random clicks in browser-based attacks.')
 @click.option('--scroll', is_flag=True, help='Enable random scrolling in browser-based attacks.')
 @click.option('-y', '--yes', is_flag=True, help='Skip confirmation prompts.')
-def cli(target, port, duration, threads, method, use_proxy, proxy_file, proxy_type, use_tor, browser_type, clicks, scroll, yes):
+def cli(target, port, duration, threads, method, use_proxy, proxy_file, proxy_type, use_tor, user_agent_source, user_agent_file, browser_type, clicks, scroll, yes):
     """CyberBlitz - Advanced Stress Testing Tool"""
     params = {}
     run_interactive = not target or not method
@@ -218,6 +247,7 @@ def cli(target, port, duration, threads, method, use_proxy, proxy_file, proxy_ty
             "target": target, "port": port, "duration": duration, "threads": threads, "method": method,
             "use_proxy": use_proxy, "proxy_file": proxy_file, "proxy_type": proxy_type,
             "use_tor": use_tor, "browser_type": browser_type,
+            "user_agent_source": user_agent_source, "user_agent_file": user_agent_file,
             "behaviors": [b for b, f in [('clicks', clicks), ('scroll', scroll)] if f]
         }
 
