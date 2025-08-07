@@ -5,11 +5,11 @@ from config import CONFIG, logger
 from utils.proxy import get_random_proxy
 
 class BotnetAttack:
-    def __init__(self, target_ip, port, botnet_type, duration):
+    def __init__(self, target_ip, port, duration, botnet_type):
         self.target_ip = target_ip
         self.port = port
-        self.botnet_type = botnet_type
         self.duration = duration
+        self.botnet_type = botnet_type
         self.stop_event = threading.Event()
 
     def stop(self):
