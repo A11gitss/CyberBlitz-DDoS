@@ -1,0 +1,17 @@
+# Go build artifacts
+main
+main.exe
+cyberblitz-go
+bin/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Log files
+logs/*.log
+!logs/.gitkeep
+
+# OS-specific
+.DS_Store
+Thumbs.db
