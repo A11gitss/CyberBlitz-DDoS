@@ -26,6 +26,22 @@ class AdvancedSettingsDialog(QDialog):
         attack_tab.setObjectName("attack_tab")
         attack_layout = QGridLayout()
         
+        # L3 Methods
+        l3_group = QGroupBox("Layer 3 Methods")
+        l3_group.setObjectName("Layer 3 Methods")
+        l3_layout = QVBoxLayout()
+        for category, methods in ATTACK_METHODS['L3'].items():
+            category_group = QGroupBox(category)
+            category_group.setObjectName(f"L3_{category}")
+            category_layout = QVBoxLayout()
+            for method in methods:
+                checkbox = QCheckBox(method)
+                checkbox.setObjectName(f"method_{method}")
+                category_layout.addWidget(checkbox)
+            category_group.setLayout(category_layout)
+            l3_layout.addWidget(category_group)
+        l3_group.setLayout(l3_layout)
+
         # L4 Methods
         l4_group = QGroupBox("Layer 4 Methods")
         l4_group.setObjectName("Layer 4 Methods")
@@ -58,8 +74,9 @@ class AdvancedSettingsDialog(QDialog):
             l7_layout.addWidget(category_group)
         l7_group.setLayout(l7_layout)
         
-        attack_layout.addWidget(l4_group, 0, 0)
-        attack_layout.addWidget(l7_group, 0, 1)
+        attack_layout.addWidget(l3_group, 0, 0)
+        attack_layout.addWidget(l4_group, 0, 1)
+        attack_layout.addWidget(l7_group, 0, 2)
         attack_tab.setLayout(attack_layout)
         
         # Browser Settings Tab
@@ -220,11 +237,12 @@ class AdvancedSettingsDialog(QDialog):
     def get_selected_methods(self):
         methods = []
         # Находим все группы категорий атак
+        l3_group = self.findChild(QGroupBox, "Layer 3 Methods")
         l4_group = self.findChild(QGroupBox, "Layer 4 Methods")
         l7_group = self.findChild(QGroupBox, "Layer 7 Methods")
         
         # Собираем методы из обоих групп
-        for group in [l4_group, l7_group]:
+        for group in [l3_group, l4_group, l7_group]:
             if group:
                 for category_group in group.findChildren(QGroupBox):
                     for checkbox in category_group.findChildren(QCheckBox):

@@ -1,4 +1,7 @@
 ATTACK_METHODS = {
+    'L3': {
+        'FLOOD': ['ICMP-FLOOD', 'IP-FRAGMENT-FLOOD']
+    },
     'L4': {
         'AMP': ['NTP', 'DNS', 'STUN', 'WSD', 'SADP'],
         'TCP': ['TCP-ACK', 'TCP-SYN', 'TCP-BYPASS', 'OVH-TCP'],

